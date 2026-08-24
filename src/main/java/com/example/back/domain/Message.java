@@ -6,7 +6,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
@@ -24,8 +23,7 @@ public class Message extends AbstractEntity {
     @Column(name = "status_sender")
     private String senderStatus;
 
-    @Lob
-    @Column(name = "content")
+    @Column(name = "content", columnDefinition = "text")
     private String content;
 
     @Column(name = "status")
