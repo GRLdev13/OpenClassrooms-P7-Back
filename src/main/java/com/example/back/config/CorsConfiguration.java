@@ -11,7 +11,7 @@ public class CorsConfiguration implements WebMvcConfigurer {
     private final String allowedOrigin;
 
     public CorsConfiguration(
-            @Value("${app.cors.allowed-origin:http://localhost:8080}") String allowedOrigin) {
+            @Value("${app.cors.allowed-origin:http://localhost:4200}") String allowedOrigin) {
         this.allowedOrigin = allowedOrigin;
     }
 
