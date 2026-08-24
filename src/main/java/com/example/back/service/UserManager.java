@@ -3,12 +3,16 @@ package com.example.back.service;
 import java.time.Instant;
 import java.util.List;
 
+import com.example.back.domain.Admin;
 import com.example.back.domain.Client;
 import com.example.back.dto.ClientDto;
 import com.example.back.dto.CreateUserRequest;
+import com.example.back.dto.LoginDto;
 import com.example.back.dto.UpdateUserRequest;
 import com.example.back.exception.EmailAlreadyUsedException;
+import com.example.back.exception.InvalidCredentialsException;
 import com.example.back.exception.UserNotFoundException;
+import com.example.back.repository.AdminRepository;
 import com.example.back.repository.ClientRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,10 +23,15 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserManager {
 
     private final ClientRepository clientRepository;
+    private final AdminRepository adminRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserManager(ClientRepository clientRepository, PasswordEncoder passwordEncoder) {
+    public UserManager(
+            ClientRepository clientRepository,
+            AdminRepository adminRepository,
+            PasswordEncoder passwordEncoder) {
         this.clientRepository = clientRepository;
+        this.adminRepository = adminRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -34,6 +43,34 @@ public class UserManager {
 
     public ClientDto getById(Long id) {
         return ClientDto.fromEntity(findActiveClient(id));
+    }
+
+    public LoginDto login(LoginDto request) {
+        Client client = clientRepository
+                .findByMailIgnoreCaseAndDeletionDateIsNull(request.email())
+                .filter(candidate -> passwordEncoder.matches(
+                        request.password(), candidate.getPassword()))
+                .orElseThrow(InvalidCredentialsException::new);
+
+        return new LoginDto(client.getMail(), null, "");
+    }
+
+    @Transactional
+    public LoginDto loginAdmin(LoginDto request) {
+        Admin admin = adminRepository
+                .findByMailIgnoreCaseAndDeletionDateIsNull(request.email())
+                .orElseThrow(InvalidCredentialsException::new);
+
+        if (!matchesAdminPassword(request.password(), admin.getPassword())) {
+            throw new InvalidCredentialsException();
+        }
+
+        if (!admin.getPassword().startsWith("{")) {
+            admin.setPassword(passwordEncoder.encode(request.password()));
+            admin.setModificationDate(Instant.now());
+        }
+
+        return new LoginDto(admin.getMail(), null, "");
     }
 
     @Transactional
@@ -90,5 +127,15 @@ public class UserManager {
     private Client findActiveClient(Long id) {
         return clientRepository.findByIdAndDeletionDateIsNull(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
+    }
+
+    private boolean matchesAdminPassword(String rawPassword, String storedPassword) {
+        if (storedPassword == null) {
+            return false;
+        }
+        if (!storedPassword.startsWith("{")) {
+            return storedPassword.equals(rawPassword);
+        }
+        return passwordEncoder.matches(rawPassword, storedPassword);
     }
 }

@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.example.back.dto.ClientDto;
 import com.example.back.dto.CreateUserRequest;
+import com.example.back.dto.LoginDto;
 import com.example.back.dto.UpdateUserRequest;
 import com.example.back.service.UserManager;
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,6 +44,26 @@ public class UserController {
     @ApiResponse(responseCode = "404", description = "User not found")
     public ClientDto getById(@PathVariable Long id) {
         return userManager.getById(id);
+    }
+
+    @PostMapping("/login")
+    @Operation(summary = "Log in an active user")
+    @ApiResponse(responseCode = "200", description = "Credentials accepted")
+    @ApiResponse(responseCode = "400", description = "Invalid request")
+    @ApiResponse(responseCode = "401", description = "Invalid email or password")
+    public LoginDto login(
+            @Valid @RequestBody LoginDto request) {
+        return userManager.login(request);
+    }
+
+    @PostMapping("/admin/login")
+    @Operation(summary = "Log in an admin")
+    @ApiResponse(responseCode = "200", description = "Credentials accepted")
+    @ApiResponse(responseCode = "400", description = "Invalid request")
+    @ApiResponse(responseCode = "401", description = "Invalid email or password")
+    public LoginDto loginAdmin(
+            @Valid @RequestBody LoginDto request) {
+        return userManager.loginAdmin(request);
     }
 
     @PostMapping
