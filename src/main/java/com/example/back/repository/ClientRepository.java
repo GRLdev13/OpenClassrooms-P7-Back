@@ -12,6 +12,8 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
 
     Optional<Client> findByIdAndDeletionDateIsNull(Long id);
 
+    Optional<Client> findByMailIgnoreCaseAndDeletionDateIsNull(String mail);
+
     boolean existsByMailIgnoreCase(String mail);
 
     boolean existsByMailIgnoreCaseAndIdNot(String mail, Long id);
