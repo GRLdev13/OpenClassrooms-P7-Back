@@ -14,6 +14,7 @@ import com.example.back.exception.InvalidCredentialsException;
 import com.example.back.exception.UserNotFoundException;
 import com.example.back.repository.AdminRepository;
 import com.example.back.repository.ClientRepository;
+import com.example.back.security.JwtTokenService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,14 +26,17 @@ public class UserManager {
     private final ClientRepository clientRepository;
     private final AdminRepository adminRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenService jwtTokenService;
 
     public UserManager(
             ClientRepository clientRepository,
             AdminRepository adminRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            JwtTokenService jwtTokenService) {
         this.clientRepository = clientRepository;
         this.adminRepository = adminRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtTokenService = jwtTokenService;
     }
 
     public List<ClientDto> getAll() {
@@ -52,7 +56,8 @@ public class UserManager {
                         request.password(), candidate.getPassword()))
                 .orElseThrow(InvalidCredentialsException::new);
 
-        return new LoginDto(client.getMail(), null, "");
+        String token = jwtTokenService.generate(client.getMail(), client.getId(), "USER");
+        return new LoginDto(client.getMail(), null, token);
     }
 
     @Transactional
@@ -70,18 +75,20 @@ public class UserManager {
             admin.setModificationDate(Instant.now());
         }
 
-        return new LoginDto(admin.getMail(), null, "");
+        String role = admin.getRole() == null ? "ADMIN" : admin.getRole().getName();
+        String token = jwtTokenService.generate(admin.getMail(), admin.getId(), role);
+        return new LoginDto(admin.getMail(), null, token);
     }
 
     @Transactional
     public ClientDto create(CreateUserRequest request) {
-        if (clientRepository.existsByMailIgnoreCase(request.mail())) {
-            throw new EmailAlreadyUsedException(request.mail());
+        if (clientRepository.existsByMailIgnoreCase(request.email())) {
+            throw new EmailAlreadyUsedException(request.email());
         }
 
         Instant now = Instant.now();
         Client client = new Client();
-        client.setMail(request.mail());
+        client.setMail(request.email());
         client.setPassword(passwordEncoder.encode(request.password()));
         client.setFirstName(request.firstName());
         client.setLastName(request.lastName());

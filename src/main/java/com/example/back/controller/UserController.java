@@ -66,7 +66,7 @@ public class UserController {
         return userManager.loginAdmin(request);
     }
 
-    @PostMapping
+     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create a user")
     @ApiResponse(responseCode = "201", description = "User created")
