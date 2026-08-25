@@ -55,6 +55,24 @@ public class ConversationManager {
         return ConversationDto.fromEntity(conversation, messages);
     }
 
+    public ConversationDto getByParticipants(Long clientId, Long adminId) {
+        if (clientId.equals(adminId)) {
+            throw new ConversationParticipantsMustDifferException();
+        }
+
+        Conversation conversation = conversationRepository
+                .findFirstByClient_IdAndAdmin_IdOrderByStartDateDescIdDesc(clientId, adminId)
+                .orElseThrow(() -> new ConversationNotFoundException(clientId, adminId));
+
+        List<MessageDto> messages = messageRepository
+                .findAllByConversation_IdOrderByCreationDateAscIdAsc(conversation.getId())
+                .stream()
+                .map(MessageDto::fromEntity)
+                .toList();
+
+        return ConversationDto.fromEntity(conversation, messages);
+    }
+
     public List<ConversationDto> getByClientId(Long clientId) {
         List<Conversation> conversations = conversationRepository
                 .findAllByClient_IdOrderByStartDateDescIdDesc(clientId);

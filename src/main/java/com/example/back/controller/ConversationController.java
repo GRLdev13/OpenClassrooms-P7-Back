@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -36,6 +37,17 @@ public class ConversationController {
     @ApiResponse(responseCode = "404", description = "Conversation not found")
     public ConversationDto getById(@PathVariable Long id) {
         return conversationManager.getById(id);
+    }
+
+    @GetMapping("/participants")
+    @Operation(summary = "Get the latest conversation between a client and an admin")
+    @ApiResponse(responseCode = "200", description = "Conversation returned with its messages")
+    @ApiResponse(responseCode = "400", description = "Participant IDs are invalid or identical")
+    @ApiResponse(responseCode = "404", description = "Conversation not found")
+    public ConversationDto getByParticipantsId(
+            @RequestParam Long clientId,
+            @RequestParam Long adminId) {
+        return conversationManager.getByParticipants(clientId, adminId);
     }
 
     @GetMapping("/client/{clientId}")

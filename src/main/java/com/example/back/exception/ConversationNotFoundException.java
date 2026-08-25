@@ -9,4 +9,8 @@ public class ConversationNotFoundException extends RuntimeException {
     public ConversationNotFoundException(Long id) {
         super("Conversation " + id + " was not found");
     }
+
+    public ConversationNotFoundException(Long clientId, Long adminId) {
+        super("No conversation was found for client " + clientId + " and admin " + adminId);
+    }
 }

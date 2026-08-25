@@ -3,16 +3,18 @@ package com.example.back.dto;
 import java.time.Instant;
 
 import com.example.back.domain.Message;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 
 public record MessageDto(
-        Long id,
-        Long conversationId,
+        @Schema(accessMode = Schema.AccessMode.READ_ONLY) Long id,
+        @Schema(accessMode = Schema.AccessMode.READ_ONLY) Long conversationId,
         Long senderId,
         String senderStatus,
-        String content,
+        @NotBlank String content,
         String status,
-        Instant creationDate,
-        Instant modificationDate) {
+        @Schema(accessMode = Schema.AccessMode.READ_ONLY) Instant creationDate,
+        @Schema(accessMode = Schema.AccessMode.READ_ONLY) Instant modificationDate) {
 
     public static MessageDto fromEntity(Message message) {
         Long conversationId = message.getConversation() == null
